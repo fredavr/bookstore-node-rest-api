@@ -7,6 +7,16 @@ const { expressjwt: e_jwt } = require("express-jwt");
 
 const SECRET = 'Vla le secret !';
 
+/* utilisation express-basic-auth simple mais non recommandé
+const basicAuth = require('express-basic-auth');
+app.use(basicAuth({
+    users: {
+        'fred': 'mdp1'
+    },
+    challenge: true
+}))
+*/
+
 app.use(express.json())
 
 /**

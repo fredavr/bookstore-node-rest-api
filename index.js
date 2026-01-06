@@ -2,6 +2,11 @@ const express = require('express');
 const moment = require('moment');
 const app = express()
 const port = process.env.PORT || 3000;
+const jwt = require('jsonwebtoken');
+const { expressjwt: e_jwt } = require("express-jwt");
+
+const SECRET = 'Vla le secret !';
+
 app.use(express.json())
 
 /**
@@ -12,18 +17,21 @@ const users = [
         "first_name": "Doe",
         "last_name": "John",
         "mail": "john.doe@studi.fr",
+        "password": "123",
         "books": [],
     },
     {
         "first_name": "Doe",
         "last_name": "Jane",
         "mail": "jane.doe@studi.fr",
+        "password": "123",
         "books": [],
     },
     {
         "first_name": "Mickaël",
         "last_name": "Andrieu",
         "mail": "mickael.andrieu@exemple.fr",
+        "password": "123",
         "books": ["0-7975-8110-3", "0-7975-8110-4"],
     },
 ]
@@ -55,6 +63,46 @@ const books = [
 /**
  * Demo Data END
  */
+
+/** 
+ * définition du middleware (fon,ction appelée avant de rentrer dans les différentes routes) 
+ * ici protège toutes les routes sauf la page de connexion 
+ * */
+app.use(
+    e_jwt({
+        secret: SECRET,
+        algorithms: ["HS256"],
+    }).unless({ path: ["/login"] })
+);
+
+app.use(function (err, req, res, next) {
+    if (err.name == "UnauthorizedError") {
+        res.status(401).send("Le jeton n'est pas valide, merci de vous authentifier sur /login !");
+    }
+});
+
+app.post('/login', (req, res) => {
+    if (!req.body.mail || !req.body.password) {
+        return res.status(400).json({ message: 'Les identifiants sont absents !' });
+    }
+
+    const user = users.find((user) => user.mail === req.body.mail && user.password === req.body.password);
+
+    if (!user) {
+        return res.status(400).json({ message: 'Les identifiants sont invalides !' });
+    }
+
+    const token = jwt.sign({
+        username: user.mail
+    }, SECRET, { expiresIn: '2 hours' });
+
+    return res.json({ access_token: token });
+});
+
+
+
+
+
 
 /**
  * Books CRUD
